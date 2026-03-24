@@ -50,11 +50,11 @@ When you say *"分析一下 WOLF 股票"* or *"Analyze NVDA stock"*, the agent e
 
 ```bash
 # Personal skill (all projects)
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
+git clone https://github.com/xincxiong/Stock-Analysis-Skill.git \
   ~/.cursor/skills/stock-analysis
 
 # Project-level skill
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
+git clone https://github.com/xincxiong/Stock-Analysis-Skill.git \
   .cursor/skills/stock-analysis
 ```
 
@@ -93,7 +93,7 @@ Then enable in `~/.openclaw/openclaw.json`:
 
 ```bash
 cd ~/.openclaw/extensions
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git stock-analysis
+git clone https://github.com/xincxiong/Stock-Analysis-Skill.git stock-analysis
 cd stock-analysis && npm install
 ```
 

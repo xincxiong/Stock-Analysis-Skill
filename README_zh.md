@@ -50,11 +50,11 @@
 
 ```bash
 # 个人级技能（所有项目可用）
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
+git clone https://github.com/xincxiong/Stock-Analysis-Skill.git \
   ~/.cursor/skills/stock-analysis
 
 # 项目级技能（通过仓库共享）
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
+git clone https://github.com/xincxiong/Stock-Analysis-Skill.git \
   .cursor/skills/stock-analysis
 ```
 
@@ -93,7 +93,7 @@ openclaw plugins install openclaw-stock-analysis
 
 ```bash
 cd ~/.openclaw/extensions
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git stock-analysis
+git clone https://github.com/xincxiong/Stock-Analysis-Skill.git stock-analysis
 cd stock-analysis && npm install
 ```
 
