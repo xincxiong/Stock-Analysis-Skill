@@ -1,3 +1,7 @@
+<p align="right">
+  <strong>English</strong> | <a href="README_zh.md">中文</a>
+</p>
+
 # Stock Analysis — Cursor Skill & OpenClaw Plugin
 
 A dual-platform stock analysis tool that performs **comprehensive, structured stock research** — from data gathering to actionable investment advice.
