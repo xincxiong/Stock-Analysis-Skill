@@ -1,104 +1,199 @@
-# cursor-skill-stock-analysis
+# Stock Analysis — Cursor Skill & OpenClaw Plugin
 
-A [Cursor](https://www.cursor.com/) Agent Skill that performs **comprehensive, structured stock analysis** — from data gathering to actionable investment advice — in a single conversation turn.
+A dual-platform stock analysis tool that performs **comprehensive, structured stock research** — from data gathering to actionable investment advice.
 
-## What It Does
+Works on both **[Cursor](https://www.cursor.com/)** (as an Agent Skill) and **[OpenClaw](https://docs.openclaw.ai/)** (as a Plugin + Workflow).
 
-When you say something like *"分析一下 WOLF 股票"* or *"Should I buy NVDA?"*, the Agent automatically executes an **8-phase analysis workflow**:
+---
+
+## Features
+
+When you say *"分析一下 WOLF 股票"* or *"Analyze NVDA stock"*, the agent executes an **8-phase analysis**:
 
 | Phase | Content |
 |-------|---------|
-| 1. Data Gathering | Parallel web searches for financials, price, technicals, analyst ratings, industry, and news |
-| 2. Company Overview | Business profile, sector, key products, recent milestones |
-| 3. Fundamental Analysis | Balance sheet, profitability, margins, cash flow, growth drivers |
-| 4. Technical Analysis | Moving averages (8/20/50/200 SMA), RSI, MACD, MFI, support/resistance levels |
-| 5. Analyst Ratings | Consensus ratings, individual analyst breakdown, options sentiment (put/call ratio, IV) |
-| 6. Risk Assessment | Company-specific, industry, and stock-level risks |
-| 7. Comprehensive Scoring | 8-dimension weighted scoring system (1–10) with letter grade (A–F) |
-| 8. Investment Advice | Scenario analysis, position sizing, entry/exit strategy, stop-loss, alternatives |
+| 1 | **Data Gathering** — parallel web searches for financials, price, technicals, analysts, industry, news |
+| 2 | **Company Overview** — profile, sector, products, milestones |
+| 3 | **Fundamental Analysis** — balance sheet, profitability, margins, cash flow, growth |
+| 4 | **Technical Analysis** — MA (8/20/50/200), RSI, MACD, MFI, support/resistance |
+| 5 | **Analyst Ratings** — consensus, individual analysts, options sentiment |
+| 6 | **Risk Assessment** — company / industry / stock-level risks |
+| 7 | **Scoring** — 8-dimension weighted model (1-10) → grade A-F |
+| 8 | **Investment Advice** — scenarios, position sizing, entry/exit, stop-loss, alternatives |
 
 ## Scoring System
 
-The skill uses a **weighted multi-dimensional scoring model**:
+| Dimension | Weight | Dimension | Weight |
+|-----------|--------|-----------|--------|
+| Financial Health | 20% | Technical Setup | 10% |
+| Profitability | 15% | Valuation | 10% |
+| Growth Potential | 15% | Industry Outlook | 10% |
+| Competitive Moat | 15% | Risk Management | 5% |
 
-| Dimension | Weight |
-|-----------|--------|
-| Financial Health | 20% |
-| Profitability | 15% |
-| Growth Potential | 15% |
-| Competitive Moat | 15% |
-| Technical Setup | 10% |
-| Valuation | 10% |
-| Industry Outlook | 10% |
-| Risk Management | 5% |
+| Score | Grade | Verdict | Max Position |
+|-------|-------|---------|-------------|
+| 8-10 | A | Strong Buy | 8-10% |
+| 6-8 | B | Buy | 5-7% |
+| 4-6 | C | Hold / Watch | 2-4% |
+| 2-4 | D | Reduce | 1-2% |
+| 0-2 | F | Sell | 0% |
 
-Each dimension is scored 1–10 using the detailed rubric in `scoring-guide.md`, then combined into a weighted composite score mapped to an investment grade:
+---
 
-| Score | Grade | Verdict |
-|-------|-------|---------|
-| 8–10 | A | Strong Buy |
-| 6–8 | B | Buy |
-| 4–6 | C | Hold / Watch |
-| 2–4 | D | Reduce |
-| 0–2 | F | Sell |
+## Installation
+
+### Cursor (Agent Skill)
+
+```bash
+# Personal skill (all projects)
+git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
+  ~/.cursor/skills/stock-analysis
+
+# Project-level skill
+git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
+  .cursor/skills/stock-analysis
+```
+
+Restart Cursor or start a new chat. The skill auto-activates on stock analysis requests.
+
+### OpenClaw (Plugin)
+
+#### Option A: Install from npm / ClawHub
+
+```bash
+openclaw plugins install openclaw-stock-analysis
+```
+
+Then enable in `~/.openclaw/openclaw.json`:
+
+```json5
+{
+  plugins: {
+    entries: {
+      "stock-analysis": {
+        enabled: true,
+        config: {
+          language: "auto",   // "auto", "zh", or "en"
+          searchCount: 8
+        }
+      }
+    }
+  },
+  tools: {
+    allow: ["stock_analyze", "stock_score"]
+  }
+}
+```
+
+#### Option B: Install from source
+
+```bash
+cd ~/.openclaw/extensions
+git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git stock-analysis
+cd stock-analysis && npm install
+```
+
+Restart the OpenClaw gateway.
+
+#### Option C: Use as Workflow (requires openclaw-workflow plugin)
+
+```bash
+# Install the workflow plugin first
+openclaw plugins install openclaw-workflow
+
+# Copy workflow definition
+cp workflows/stock-analysis.yaml ~/.openclaw/workflows/
+
+# Run the analysis
+openclaw workflow run stock-analysis --var ticker=WOLF --var company=Wolfspeed
+```
+
+---
+
+## Usage
+
+### Cursor
+
+Just chat naturally:
+
+- "分析一下 WOLF 股票"
+- "Analyze NVDA — should I buy?"
+- "Give me a stock research report on AAPL"
+
+### OpenClaw
+
+The plugin registers two tools:
+
+#### `stock_analyze` (primary)
+
+Full 8-phase analysis. Parameters:
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ticker` | string | Yes | Stock ticker (e.g. `WOLF`) |
+| `company` | string | No | Company name (auto-resolved) |
+| `depth` | enum | No | `quick` / `standard` / `deep` (default: `standard`) |
+
+Depth levels:
+
+| Depth | Phases | Use Case |
+|-------|--------|----------|
+| `quick` | Overview + Score | Fast screening |
+| `standard` | Full 8-phase | Regular analysis |
+| `deep` | + Options sentiment, short interest, alternatives | Deep dive |
+
+#### `stock_score` (optional)
+
+Standalone scoring when you already have the data:
+
+```
+stock_score({ ticker: "WOLF", data: { debtToEquity: 4.49, netMargin: -89.4, beta: 3.01, priceToBook: 1.19, industryPB: 10.99 }})
+```
+
+### Workflow Mode
+
+The `workflows/stock-analysis.yaml` defines a DAG pipeline:
+
+```
+search-financials ──┐
+search-price ───────┼── fundamental-analysis ──┐
+search-news ────────┘                          │
+search-technicals ──┬── technical-analysis ────┼── scoring ── advice ── assemble
+search-analysts ────┴── sentiment-analysis ────┤
+search-industry ────┬── risk-assessment ───────┘
+search-news ────────┘
+```
+
+Data gathering runs in parallel (up to 4 concurrent), analysis phases run when dependencies complete, final scoring and advice are sequential.
+
+---
 
 ## File Structure
 
 ```
 stock-analysis/
-├── SKILL.md           # Main workflow (311 lines) — the 8-phase analysis framework
-├── scoring-guide.md   # Scoring rubric (115 lines) — detailed criteria for each dimension
-└── README.md          # This file
+├── SKILL.md                          # Cursor skill entry (auto-discovered)
+├── scoring-guide.md                  # Cursor scoring reference
+├── package.json                      # OpenClaw plugin manifest (npm)
+├── openclaw.plugin.json              # OpenClaw plugin config schema
+├── tsconfig.json                     # TypeScript config
+├── src/
+│   ├── index.ts                      # OpenClaw plugin entry point
+│   └── prompts/
+│       ├── analysis-workflow.md      # Analysis phase template
+│       └── scoring-rubric.md         # Scoring criteria
+├── workflows/
+│   └── stock-analysis.yaml           # OpenClaw workflow DAG
+└── README.md
 ```
-
-## Installation
-
-### Option 1: Personal skill (available across all projects)
-
-```bash
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
-  ~/.cursor/skills/stock-analysis
-```
-
-### Option 2: Project-level skill (shared via repo)
-
-```bash
-git clone https://github.com/xincxiong/cursor-skill-stock-analysis.git \
-  .cursor/skills/stock-analysis
-```
-
-After cloning, **restart Cursor** or open a new chat — the skill will be automatically discovered.
-
-## Trigger Phrases
-
-The skill activates when you mention any of:
-
-- "分析一下 XX 股票" / "analyze XX stock"
-- "stock research" / "stock forecast"
-- "should I buy/sell [ticker]"
-- "investment analysis"
-- Or simply mention a stock ticker for evaluation
-
-## Example Output
-
-A typical analysis report includes:
-
-- **Financial snapshot** — price, market cap, 52-week range, P/E, P/B, D/E, etc.
-- **Balance sheet & profitability tables** — assets, liabilities, margins, cash flow
-- **Technical chart analysis** — MA system, momentum indicators, key price levels
-- **Analyst consensus** — ratings from major Wall Street firms with target prices
-- **Risk matrix** — categorized company/industry/stock risks
-- **Weighted scorecard** — 8 dimensions with rationale
-- **Scenario analysis** — bull/base/bear/worst case with probability-weighted target
-- **Actionable advice** — batch entry plan, stop-loss, take-profit, position sizing by investor profile
 
 ## Language
 
-The skill automatically matches the user's language. Chinese input produces Chinese output; English input produces English output.
+Both platforms auto-detect and match the user's language. Chinese input → Chinese output.
 
 ## Disclaimer
 
-This skill generates analysis for **educational and reference purposes only**. It does not constitute investment advice. All investment decisions should be made independently based on your own financial situation and risk tolerance.
+This tool generates analysis for **educational and reference purposes only**. It does not constitute investment advice. All investment decisions should be made independently based on your own financial situation and risk tolerance.
 
 ## License
 

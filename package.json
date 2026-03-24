@@ -1,0 +1,32 @@
+{
+  "name": "openclaw-stock-analysis",
+  "version": "1.0.0",
+  "description": "OpenClaw plugin for comprehensive stock analysis: fundamentals, technicals, analyst ratings, scoring, and investment advice",
+  "type": "module",
+  "main": "src/index.ts",
+  "openclaw": {
+    "extensions": ["./src/index.ts"]
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "stock-analysis",
+    "investment",
+    "finance",
+    "technical-analysis",
+    "fundamental-analysis"
+  ],
+  "author": "xincxiong",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xincxiong/cursor-skill-stock-analysis"
+  },
+  "peerDependencies": {
+    "openclaw": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "^0.34.0",
+    "typescript": "^5.5.0"
+  }
+}

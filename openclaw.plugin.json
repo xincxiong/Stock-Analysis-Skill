@@ -1,0 +1,21 @@
+{
+  "id": "stock-analysis",
+  "name": "Stock Analysis",
+  "description": "Comprehensive stock analysis covering fundamentals, technicals, analyst ratings, risk assessment, weighted scoring, and actionable investment advice. Provides stock_analyze and stock_score tools.",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "language": {
+        "type": "string",
+        "description": "Output language: 'auto' (match user), 'zh' (Chinese), 'en' (English)",
+        "default": "auto"
+      },
+      "searchCount": {
+        "type": "number",
+        "description": "Max search results per query",
+        "default": 8
+      }
+    },
+    "additionalProperties": false
+  }
+}

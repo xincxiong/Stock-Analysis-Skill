@@ -1,0 +1,175 @@
+name: stock-analysis
+version: "1.0"
+description: >
+  Multi-phase stock analysis pipeline. Gathers data in parallel,
+  then runs fundamental, technical, and sentiment analysis before
+  producing a scored investment report.
+concurrency: 4
+
+steps:
+  # ── Phase 1: Parallel data gathering ────────────────────────────────
+  - id: search-financials
+    task: >
+      Search the web for "{ticker} {company} latest quarterly earnings
+      revenue net income {date:%Y}". Extract key financial metrics:
+      revenue, net income, EPS, margins, cash flow. Save results to
+      data/financials.md as a markdown table.
+    timeout: 60
+    outputs: ["data/financials.md"]
+    retry: 2
+
+  - id: search-price
+    task: >
+      Search the web for "{ticker} stock price market cap PE ratio
+      52 week high low beta shares outstanding".
+      Save results to data/price.md as a markdown table.
+    timeout: 60
+    outputs: ["data/price.md"]
+    retry: 2
+
+  - id: search-technicals
+    task: >
+      Search the web for "{ticker} technical analysis moving average
+      RSI MACD MFI support resistance level".
+      Extract: 8/20/50/200-day SMA, RSI, MACD, key support/resistance.
+      Save to data/technicals.md.
+    timeout: 60
+    outputs: ["data/technicals.md"]
+    retry: 2
+
+  - id: search-analysts
+    task: >
+      Search the web for "{ticker} analyst price target rating buy
+      sell forecast {date:%Y}".
+      Extract: consensus rating, target prices, individual analyst
+      ratings with firm names. Save to data/analysts.md.
+    timeout: 60
+    outputs: ["data/analysts.md"]
+    retry: 2
+
+  - id: search-industry
+    task: >
+      Search the web for "{company} industry competitors market share
+      outlook {date:%Y}".
+      Extract: competitive landscape, market size, growth trends.
+      Save to data/industry.md.
+    timeout: 60
+    outputs: ["data/industry.md"]
+    retry: 2
+
+  - id: search-news
+    task: >
+      Search the web for "{company} {ticker} latest news events {date:%Y}".
+      Extract: recent material events (earnings, M&A, product launches,
+      restructuring, management changes). Save to data/news.md.
+    timeout: 60
+    outputs: ["data/news.md"]
+    retry: 2
+
+  # ── Phase 2: Analysis synthesis ─────────────────────────────────────
+  - id: fundamental-analysis
+    task: >
+      Read data/financials.md, data/price.md, and data/news.md.
+      Write a fundamental analysis covering:
+      1. Financial snapshot table (price, market cap, 52w range, beta)
+      2. Balance sheet health (assets, liabilities, D/E, current ratio, P/B)
+      3. Profitability (revenue trend, margins, EPS, cash flow)
+      4. Growth drivers and revenue mix
+      Save to report/02-fundamentals.md.
+    depends_on: [search-financials, search-price, search-news]
+    timeout: 90
+    outputs: ["report/02-fundamentals.md"]
+
+  - id: technical-analysis
+    task: >
+      Read data/technicals.md and data/price.md.
+      Write a technical analysis covering:
+      1. Moving average system (8/20/50/200 SMA vs price)
+      2. Momentum indicators (RSI, MACD, MFI)
+      3. Key support/resistance levels
+      4. Recent price action (1W/1M/3M/6M % changes)
+      5. Technical summary paragraph
+      Save to report/03-technicals.md.
+    depends_on: [search-technicals, search-price]
+    timeout: 90
+    outputs: ["report/03-technicals.md"]
+
+  - id: sentiment-analysis
+    task: >
+      Read data/analysts.md.
+      Write analyst ratings & sentiment section covering:
+      1. Consensus overview table
+      2. Individual analyst breakdown table (firm, analyst, rating, target, date)
+      Save to report/04-sentiment.md.
+    depends_on: [search-analysts]
+    timeout: 60
+    outputs: ["report/04-sentiment.md"]
+
+  - id: risk-assessment
+    task: >
+      Read data/industry.md, data/news.md, data/financials.md.
+      Write risk assessment covering:
+      1. Company-specific risks (financial, operational, legal)
+      2. Industry risks (competition, cyclicality, disruption, geopolitical)
+      3. Stock-specific risks (liquidity, volatility, short interest)
+      Save to report/05-risks.md.
+    depends_on: [search-industry, search-news, search-financials]
+    timeout: 60
+    outputs: ["report/05-risks.md"]
+
+  # ── Phase 3: Scoring & advice ───────────────────────────────────────
+  - id: scoring
+    task: >
+      Read report/02-fundamentals.md, report/03-technicals.md,
+      report/04-sentiment.md, report/05-risks.md.
+      Score the stock on 8 dimensions (1-10 each):
+      - Financial Health (20%), Profitability (15%), Growth Potential (15%)
+      - Competitive Moat (15%), Technical Setup (10%), Valuation (10%)
+      - Industry Outlook (10%), Risk Management (5%)
+      Output a weighted scoring table with rationale per dimension,
+      total score, and letter grade (A=Strong Buy through F=Sell).
+      Save to report/06-scoring.md.
+    depends_on:
+      - fundamental-analysis
+      - technical-analysis
+      - sentiment-analysis
+      - risk-assessment
+    timeout: 90
+    outputs: ["report/06-scoring.md"]
+
+  - id: investment-advice
+    task: >
+      Read all report/ files. Write actionable investment advice:
+      1. Scenario analysis (bull/base/bear/worst with probability & 12M target)
+      2. Probability-weighted target price
+      3. Position sizing by investor profile
+      4. Entry strategy (3-4 batch tranches with price triggers)
+      5. Exit strategy (take-profit, stop-loss, trailing stop)
+      6. Advice for existing holders
+      7. Short-term trading levels
+      8. 2-3 alternative investments in the same sector
+      9. Key catalyst calendar
+      End with one-sentence thesis and disclaimer.
+      Save to report/07-advice.md.
+    depends_on: [scoring]
+    timeout: 90
+    outputs: ["report/07-advice.md"]
+
+  # ── Phase 4: Final assembly ─────────────────────────────────────────
+  - id: assemble-report
+    task: >
+      Read all files in report/ directory in order (02 through 07).
+      Also read data/news.md for the company overview.
+      Assemble into a single comprehensive report:
+      1. Company Overview (from news + financials)
+      2. Fundamental Analysis
+      3. Technical Analysis
+      4. Analyst Ratings & Sentiment
+      5. Risk Assessment
+      6. Comprehensive Scoring
+      7. Investment & Trading Advice
+      Format with clear headers and tables.
+      Save final report to report/stock-analysis-{ticker}.md.
+    depends_on: [investment-advice]
+    timeout: 60
+    outputs: ["report/stock-analysis-{ticker}.md"]
